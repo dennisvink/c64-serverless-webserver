@@ -17,6 +17,7 @@
 80 PRINT "    </P>"
 100 PRINT "    <HR />"
 110 PRINT "      <A HREF='/'>HOME</A> |"
+115 PRINT "      <A HREF='/lyrics'>Random Goth Lyrics</A>"
 120 PRINT "      <A HREF='/about'>About this project</A>"
 200 PRINT "    <HR />"
 210 PRINT "    (c) 2022 Dennis Vink, Binx.io"
