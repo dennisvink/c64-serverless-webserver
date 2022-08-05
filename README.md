@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Commodore 64 was introduced in August 1982, and it had a huge impact on my future. My father had bought a Commmodore 64 and a year or two later I spied a programming-savy family member writing BASIC code. A week later I wrote my very first computer program (printing my name over and over again). The rest is history.
+The Commodore 64 was introduced in August 1982, and it had a huge impact on my future. My father had bought a Commodore 64 and a year or two later I spied a programming-savvy family member writing BASIC code. A week later I wrote my very first computer program (printing my name over and over again). The rest is history.
 
 This project is an homage to the C64 and elevates technology of the early 80s to relevance in the modern day and age of cloud technology. I present to you the Commodore 64 Web Server, running on AWS Lambda.
 
