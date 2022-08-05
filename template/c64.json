@@ -1,0 +1,251 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "My API Gateway and Lambda function",
+  "Parameters": {
+    "C64ECRImageURI": {
+      "Type": "String",
+      "Description": "URI of the ECR image to be used"
+    }
+  },
+  "Resources": {
+    "Commodore64Lambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "PackageType": "Image",
+        "Role": {
+          "Fn::GetAtt": [
+            "Commodore64LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ImageUri": {
+            "Ref": "C64ECRImageURI"
+          }
+        },
+        "Architectures": [
+          "x86_64"
+        ],
+        "MemorySize": 512,
+        "Timeout": 30
+      }
+    },
+    "Commodore64LambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ]
+      }
+    },
+    "Commodore64APIGateway": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Description": "C64 API Gateway",
+        "Name": "c64api",
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL"
+          ]
+        }
+      }
+    },
+    "Commodore64ProxyResource": {
+        "Type": "AWS::ApiGateway::Resource",
+        "Properties": {
+            "RestApiId": {
+                "Ref": "Commodore64APIGateway"
+            },
+            "ParentId": {
+                "Fn::GetAtt": [
+                    "Commodore64APIGateway",
+                    "RootResourceId"
+                ]
+            },
+            "PathPart": "{proxy+}"
+        }
+    },
+    "Commodore64APIGatewayPathMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Sub": [
+              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations",
+              {
+                "lambdaArn": {
+                  "Fn::GetAtt": [
+                    "Commodore64Lambda",
+                    "Arn"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "Commodore64ProxyResource"
+        },
+        "RestApiId": {
+          "Ref": "Commodore64APIGateway"
+        }
+      }
+    },
+    "Commodore64APIGatewayRootMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Sub": [
+              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations",
+              {
+                "lambdaArn": {
+                  "Fn::GetAtt": [
+                    "Commodore64Lambda",
+                    "Arn"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "Commodore64APIGateway",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "Commodore64APIGateway"
+        }
+      }
+    },
+    "Commodore64GatewayDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "DependsOn": [
+        "Commodore64APIGatewayRootMethod"
+      ],
+      "Properties": {
+        "RestApiId": {
+          "Ref": "Commodore64APIGateway"
+        }
+      }
+    },
+    "lambdaApiGatewayInvoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Commodore64Lambda",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": { "Fn::Join": [ "", [
+          "arn:aws:execute-api:",
+          { "Ref": "AWS::Region" }, ":",
+          { "Ref": "AWS::AccountId" }, ":",
+          { "Ref": "Commodore64APIGateway" },
+          "/*/*/*"
+        ] ] }
+      }
+    },
+    "lambdaIAMRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/c64lambda:*"
+                    }
+                  ]
+                }
+              ]
+            },
+            "PolicyName": "lambda"
+          }
+        ]
+      }
+    },
+    "lambdaLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/c64lambda",
+        "RetentionInDays": 90
+      }
+    },
+    "Stage": {
+      "DependsOn": ["Commodore64APIGateway", "Commodore64GatewayDeployment"],
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "StageName": "prod",
+        "RestApiId": {
+          "Ref": "Commodore64APIGateway"
+        },
+        "DeploymentId": {
+          "Ref": "Commodore64GatewayDeployment"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Commodore64APIGatewayInvokeURL": {
+      "Value": {
+        "Fn::Sub": "https://${Commodore64APIGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
+      }
+    }
+  }
+}
