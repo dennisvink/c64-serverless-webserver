@@ -68,7 +68,7 @@
 565 PRINT "https://github.com/robfromoz/C64-BASIC/</A><br />"
 600 PRINT "    <HR />"
 610 PRINT "      <A HREF='/'>HOME</A> |"
-620 PRINT "      <A HREF='/lyrics'>Random Goth Lyrics</A>"
+620 PRINT "      <A HREF='/lyrics'>Random Goth Lyrics</A> |"
 630 PRINT "      <A HREF='/about'>About this project</A>"
 640 PRINT "    <HR />"
 650 PRINT "</BODY></HTML>"
