@@ -17,7 +17,3 @@ Michael Steil and James Abbatiello extracted the C64 source code and created the
 This project utilizes their C64 runtime to run the BASIC code.
 
 You can find their repository here: https://github.com/mist64/cbmbasic
-
-## Pushing Docker image:
-
-aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <accountId>.dkr.ecr.<region>.amazonaws.com
